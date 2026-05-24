@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Penilaian — SPK Medika</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+/* ── Kandidat List ─────────────────────────────────────────── */
+.kand-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; border-bottom: 1px solid #F5F5F5;
+  cursor: pointer; transition: background .15s;
+  position: relative;
+}
+.kand-item:hover { background: #FFF5F5; }
+.kand-item.selected {
+  background: #FFF0EE;
+  border-left: 3px solid var(--primary);
+}
+.kand-item:not(.selected) { border-left: 3px solid transparent; }
+.kand-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .8rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.kand-avatar.av-proses   { background: #E67E22; }
+.kand-avatar.av-diterima { background: #27AE60; }
+.kand-avatar.av-ditolak  { background: #C0392B; }
+.kand-name { font-size: .875rem; font-weight: 600; color: #222; line-height: 1.2; }
+.kand-pos  { font-size: .72rem; color: #888; margin-top: 1px; }
+.kand-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; margin-left: auto; }
+
+/* ── Search Box ────────────────────────────────────────────── */
+.search-wrap { position: relative; }
+.search-wrap .bi-search {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  color: #aaa; font-size: .8rem; pointer-events: none;
+}
+.search-wrap input { padding-left: 30px; }
+
+/* ── Summary Bar ───────────────────────────────────────────── */
+.summary-bar {
+  display: flex; gap: 12px; padding: 8px 16px;
+  background: #FAFAFA; border-bottom: 1px solid #F0F0F0;
+  font-size: .72rem; color: #666;
+}
+.summary-bar .s-item { display: flex; align-items: center; gap: 4px; }
+.summary-bar .s-dot  { width: 7px; height: 7px; border-radius: 50%; }
+
+/* ── Empty State ───────────────────────────────────────────── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 48px 24px; color: #aaa;
+}
+.empty-state .es-icon {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: #F5F5F5; display: flex; align-items: center;
+  justify-content: center; font-size: 1.6rem; margin-bottom: 14px; color: #ccc;
+}
+.empty-state p { font-size: .875rem; margin: 0; }
+
+/* ── Kriteria Row ──────────────────────────────────────────── */
+.kri-row {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px 20px; border-bottom: 1px solid #F7F7F7;
+  transition: background .1s;
+}
+.kri-row:last-child { border-bottom: none; }
+.kri-row:hover { background: #FDFCFC; }
+.kri-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .7rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+}
+.kri-info { flex: 0 0 180px; }
+.kri-code {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--primary); color: #fff; border-radius: 4px;
+  font-size: .68rem; font-weight: 700; padding: 1px 6px; margin-bottom: 3px;
+}
+.kri-name  { font-size: .82rem; font-weight: 600; color: #333; }
+.kri-bobot {
+  display: inline-block; background: #F0F0F0; color: #666;
+  border-radius: 10px; font-size: .68rem; padding: 1px 7px; margin-top: 3px;
+}
+.kri-input { flex: 1; }
+.kri-input .form-select,
+.kri-input .form-control { font-size: .82rem; }
+.kri-input .form-select:disabled,
+.kri-input .form-control:disabled {
+  background: #F8F9FA; color: #555; border-color: #E9ECEF;
+}
+.nilai-display {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 5px; font-size: .75rem; color: #666;
+}
+.nilai-display .nd-val {
+  font-weight: 700; color: var(--primary);
+  background: #FFF5F5; padding: 1px 8px; border-radius: 4px;
+  border: 1px solid #FFD5D0;
+}
+.nilai-display .nd-bar {
+  flex: 1; height: 4px; background: #EEE; border-radius: 2px; min-width: 60px;
+}
+.nilai-display .nd-fill { height: 100%; border-radius: 2px; background: var(--primary); transition: width .3s; }
+
+/* ── Lock Banner ───────────────────────────────────────────── */
+.lock-banner {
+  display: flex; align-items: center; gap: 10px;
+  background: #F0F4FF; border: 1px solid #D0DCFF;
+  border-radius: 8px; padding: 10px 14px; margin: 14px 20px 4px;
+  font-size: .8rem; color: #3B5BDB;
+}
+.lock-banner i { font-size: 1rem; flex-shrink: 0; }
+
+/* ── Info Banner ───────────────────────────────────────────── */
+.info-banner {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: #FFFBF0; border: 1px solid #FFE8A0;
+  border-radius: 8px; padding: 10px 14px; margin: 14px 20px 4px;
+  font-size: .78rem; color: #7D5A00;
+}
+.info-banner i { flex-shrink: 0; margin-top: 1px; }
+
+/* ── Kandidat header card ──────────────────────────────────── */
+.kand-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px; background: #FFF5F5;
+  border-bottom: 1px solid #F0F0F0;
+}
+.kand-header .kh-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; font-weight: 700; flex-shrink: 0;
+}
+.kand-header .kh-name  { font-weight: 700; font-size: .9rem; color: #222; }
+.kand-header .kh-pos   { font-size: .72rem; color: #888; }
+
+/* ── Form footer ───────────────────────────────────────────── */
+.form-footer {
+  display: none; justify-content: space-between; align-items: center;
+  padding: 12px 20px; border-top: 1px solid #F0F0F0; background: #FAFAFA;
+}
+</style>
+</head>
+<body>
+<div id="sidebar"></div>
+<div id="topbar"></div>
+<div id="main">
+  <div class="content-area">
+    <div class="row g-3">
+
+      <!-- ══ LEFT: Pilih Kandidat ══════════════════════════════ -->
+      <div class="col-md-4">
+        <div class="sec-card" style="height:auto;overflow:hidden">
+
+          <!-- Header -->
+          <div class="sec-title" style="padding:13px 16px;border-bottom:1px solid #F0F0F0">
+            <i class="bi bi-people-fill me-2" style="color:var(--primary)"></i>
+            Pilih Kandidat
+          </div>
+
+          <!-- Summary bar -->
+          <div class="summary-bar" id="summary-bar">
+            <div class="s-item"><div class="s-dot" style="background:#E67E22"></div><span id="cnt-total">0 kandidat</span></div>
+            <div class="s-item"><div class="s-dot" style="background:#27AE60"></div><span id="cnt-dinilai">0 dinilai</span></div>
+            <div class="s-item"><div class="s-dot" style="background:#aaa"></div><span id="cnt-belum">0 belum</span></div>
+          </div>
+
+          <!-- Search -->
+          <div style="padding:10px 12px;border-bottom:1px solid #F5F5F5">
+            <div class="search-wrap">
+              <i class="bi bi-search"></i>
+              <input type="text" id="search-kandidat" class="form-control form-control-sm"
+                     placeholder="Cari nama...">
+            </div>
+          </div>
+
+          <!-- List -->
+          <div id="list-kandidat" style="max-height:500px;overflow-y:auto"></div>
+        </div>
+      </div>
+
+      <!-- ══ RIGHT: Form Penilaian ═════════════════════════════ -->
+      <div class="col-md-8">
+        <div class="sec-card" style="height:auto;overflow:hidden">
+
+          <!-- Card header -->
+          <div style="padding:13px 18px;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;justify-content:space-between">
+            <span class="fw-semibold" style="font-size:.9rem">
+              <i class="bi bi-clipboard2-check me-2" style="color:var(--primary)"></i>Form Penilaian
+            </span>
+            <div id="form-header-badge"></div>
+          </div>
+
+          <!-- Kandidat header (shown when selected) -->
+          <div id="kand-header-row" style="display:none"></div>
+
+          <!-- Banner (lock / info) -->
+          <div id="form-banner"></div>
+
+          <!-- Form body -->
+          <div id="form-penilaian">
+            <div class="empty-state">
+              <div class="es-icon"><i class="bi bi-person-bounding-box"></i></div>
+              <p class="fw-semibold mb-1" style="color:#888">Belum ada kandidat dipilih</p>
+              <p style="font-size:.78rem">Pilih kandidat dari daftar di sebelah kiri</p>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="form-footer" id="footer-form"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+  renderLayout('Penilaian Kandidat', 'penilaian');
+
+  let kriteriaList = [], subKriteriaMap = {}, selectedKandidatId = null;
+  let allKandidat = [], existingData = {}, lockedMode = false;
+  let evaluatedSet = new Set();
+
+  /* ── Init ─────────────────────────────────────────────────── */
+  async function init() {
+    try {
+      const [kandRes, kriRes, evalRes] = await Promise.all([
+        api.get('/api/kandidat?size=999'),
+        api.get('/api/kriteria'),
+        api.get('/api/penilaian/evaluated-ids')
+      ]);
+      allKandidat  = kandRes.data.content || kandRes.data;
+      kriteriaList = kriRes.data;
+      evaluatedSet = new Set(evalRes.data);
+
+      for (const k of kriteriaList) {
+        const res = await api.get('/api/sub-kriteria?kriteriaId=' + k.id);
+        if (res.data.length > 0) subKriteriaMap[k.id] = res.data;
+      }
+
+      renderKandidatList(allKandidat);
+      updateSummary();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const preId = urlParams.get('kandidatId');
+      if (preId) selectKandidat(parseInt(preId));
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  /* ── Summary bar ──────────────────────────────────────────── */
+  function updateSummary() {
+    const total   = allKandidat.length;
+    const dinilai = evaluatedSet.size;
+    document.getElementById('cnt-total').textContent   = total + ' kandidat';
+    document.getElementById('cnt-dinilai').textContent = dinilai + ' dinilai';
+    document.getElementById('cnt-belum').textContent   = (total - dinilai) + ' belum';
+  }
+
+  /* ── Helpers ──────────────────────────────────────────────── */
+  function initials(nama) {
+    return nama.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+  }
+
+  function avatarClass(status) {
+    if (status === 'DITERIMA') return 'av-diterima';
+    if (status === 'DITOLAK')  return 'av-ditolak';
+    return 'av-proses';
+  }
+
+  function dinilaiLabel(id) {
+    return evaluatedSet.has(id)
+      ? `<span class="badge bg-success" style="font-size:.62rem"><i class="bi bi-check-circle me-1"></i>Dinilai</span>`
+      : `<span class="badge bg-light text-secondary border" style="font-size:.62rem">Belum dinilai</span>`;
+  }
+
+  /* ── Kandidat list ────────────────────────────────────────── */
+  function renderKandidatList(list) {
+    const el = document.getElementById('list-kandidat');
+    if (list.length === 0) {
+      el.innerHTML = '<div class="text-center text-muted p-4 small"><i class="bi bi-search d-block fs-4 mb-2"></i>Tidak ada kandidat ditemukan</div>';
+      return;
+    }
+    el.innerHTML = list.map(k => `
+      <div class="kand-item ${selectedKandidatId===k.id?'selected':''}" id="kitem-${k.id}"
+           onclick="selectKandidat(${k.id})">
+        <div class="kand-avatar ${avatarClass(k.status)}">${initials(k.nama)}</div>
+        <div style="min-width:0;flex:1">
+          <div class="kand-name">${k.nama}</div>
+          <div class="kand-pos"><i class="bi bi-mortarboard me-1" style="font-size:.65rem"></i>${k.pendidikanTerakhir || '—'}</div>
+        </div>
+        <div class="kand-badges">
+          ${statusBadge(k.status)}
+          <span id="kbadge-${k.id}">${dinilaiLabel(k.id)}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  function updateDinilaiLabel(id) {
+    const el = document.getElementById('kbadge-' + id);
+    if (el) el.innerHTML = dinilaiLabel(id);
+    // also update selected class
+    document.querySelectorAll('.kand-item').forEach(el => {
+      el.classList.toggle('selected', el.id === 'kitem-' + selectedKandidatId);
+    });
+  }
+
+  document.getElementById('search-kandidat').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    renderKandidatList(allKandidat.filter(k =>
+      k.nama.toLowerCase().includes(q)));
+  });
+
+  /* ── Select kandidat ──────────────────────────────────────── */
+  async function selectKandidat(id) {
+    selectedKandidatId = id;
+    const k = allKandidat.find(x => x.id === id);
+    if (!k) return;
+
+    // highlight list
+    document.querySelectorAll('.kand-item').forEach(el => el.classList.remove('selected'));
+    const item = document.getElementById('kitem-' + id);
+    if (item) item.classList.add('selected');
+
+    // show kandidat header
+    const hr = document.getElementById('kand-header-row');
+    hr.style.display = 'flex';
+    hr.innerHTML = `
+      <div class="kand-header" style="width:100%">
+        <div class="kh-avatar">${initials(k.nama)}</div>
+        <div>
+          <div class="kh-name">${k.nama}</div>
+          <div class="kh-pos">
+            <i class="bi bi-mortarboard me-1"></i>${k.pendidikanTerakhir||'—'}
+            &nbsp;·&nbsp;${statusBadge(k.status)}
+          </div>
+        </div>
+      </div>`;
+
+    // load existing penilaian
+    existingData = {};
+    try {
+      const res = await api.get('/api/penilaian/kandidat/' + id);
+      res.data.forEach(p => { existingData[p.kriteria.id] = p; });
+    } catch(e) {}
+
+    const sudahDinilai = Object.keys(existingData).length > 0;
+    if (sudahDinilai) evaluatedSet.add(id); else evaluatedSet.delete(id);
+    updateDinilaiLabel(id);
+    updateSummary();
+
+    lockedMode = sudahDinilai;
+    renderBanner(lockedMode);
+    renderFormFields(existingData, lockedMode);
+    updateFooter(lockedMode, sudahDinilai);
+  }
+
+  /* ── Banner ───────────────────────────────────────────────── */
+  function renderBanner(locked) {
+    const el = document.getElementById('form-banner');
+    if (locked) {
+      el.innerHTML = `
+        <div class="lock-banner">
+          <i class="bi bi-lock-fill"></i>
+          <span>Penilaian sudah tersimpan. Klik <strong>Edit Penilaian</strong> untuk mengubah data.</span>
+        </div>`;
+    } else {
+      el.innerHTML = `
+        <div class="info-banner">
+          <i class="bi bi-lightbulb-fill"></i>
+          <span>
+            <strong>C1 Pendidikan</strong> &amp; <strong>C2 Pengalaman Kerja</strong> dipilih dari dropdown.
+            <strong>C3, C4, C5</strong> diisi dengan nilai <strong>0 – 100</strong>.
+          </span>
+        </div>`;
+    }
+  }
+
+  /* ── Form fields ──────────────────────────────────────────── */
+  function renderFormFields(existing, disabled) {
+    const form = document.getElementById('form-penilaian');
+    form.innerHTML = '<div id="fields-kriteria"></div>';
+
+    document.getElementById('fields-kriteria').innerHTML = kriteriaList.map((k, i) => {
+      const hasSub = subKriteriaMap[k.id]?.length > 0;
+      const ex = existing[k.id];
+      let inputHtml;
+
+      if (hasSub) {
+        const opts = subKriteriaMap[k.id].map(s =>
+          `<option value="${s.id}" data-nilai="${s.nilai}" ${ex?.subKriteria?.id===s.id?'selected':''}>
+             ${s.namaSub} (Nilai: ${s.nilai})
+           </option>`).join('');
+        const curNilai = ex?.nilaiInput ?? null;
+        const fillPct  = curNilai !== null ? Math.min(100, curNilai) : 0;
+        inputHtml = `
+          <select class="form-select form-select-sm" id="field-${k.id}"
+                  onchange="updateNilai(${k.id}, this)" ${disabled?'disabled':''}>
+            <option value="">— Pilih —</option>${opts}
+          </select>
+          <div class="nilai-display mt-2">
+            <span>Nilai:</span>
+            <span class="nd-val" id="display-${k.id}">${curNilai !== null ? curNilai : '—'}</span>
+            <div class="nd-bar"><div class="nd-fill" id="bar-${k.id}" style="width:${fillPct}%"></div></div>
+          </div>`;
+      } else {
+        const curVal  = ex?.nilaiInput ?? '';
+        const fillPct = curVal !== '' ? Math.min(100, parseFloat(curVal)||0) : 0;
+        inputHtml = `
+          <input type="number" class="form-control form-control-sm" id="field-${k.id}"
+                 min="0" max="100" step="0.5" value="${curVal}"
+                 placeholder="Masukkan nilai 0 – 100"
+                 oninput="updateBar(${k.id}, this.value)"
+                 ${disabled?'disabled':''}>
+          <div class="nilai-display mt-2">
+            <div class="nd-bar" style="min-width:80px"><div class="nd-fill" id="bar-${k.id}" style="width:${fillPct}%"></div></div>
+            <span id="display-${k.id}" style="font-size:.72rem;color:#888">${curVal !== '' ? curVal + ' / 100' : '—'}</span>
+          </div>`;
+      }
+
+      return `
+        <div class="kri-row">
+          <div class="kri-num">${i+1}</div>
+          <div class="kri-info">
+            <div class="kri-code">${k.kode}</div>
+            <div class="kri-name">${k.namaKriteria}</div>
+            <div class="kri-bobot"><i class="bi bi-bar-chart-fill me-1" style="font-size:.6rem"></i>Bobot ${k.bobot}%</div>
+          </div>
+          <div class="kri-input">${inputHtml}</div>
+        </div>`;
+    }).join('');
+  }
+
+  /* ── Footer ───────────────────────────────────────────────── */
+  function updateFooter(locked, sudahDinilai) {
+    const footer = document.getElementById('footer-form');
+    footer.style.display = 'flex';
+
+    if (locked) {
+      footer.innerHTML = `
+        <div class="d-flex align-items-center gap-2 text-muted" style="font-size:.8rem">
+          <i class="bi bi-shield-check text-success"></i>
+          <span>Data penilaian tersimpan dengan aman</span>
+        </div>
+        <button class="btn btn-warning btn-sm px-3" onclick="enterEditMode()">
+          <i class="bi bi-pencil-fill me-1"></i>Edit Penilaian
+        </button>`;
+    } else if (sudahDinilai) {
+      footer.innerHTML = `
+        <button class="btn btn-outline-secondary btn-sm" onclick="cancelEdit()">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Batalkan Edit
+        </button>
+        <button class="btn btn-primary btn-sm px-3" id="btn-simpan" onclick="simpanPenilaian()">
+          <i class="bi bi-floppy-fill me-1"></i>Simpan Perubahan
+        </button>`;
+    } else {
+      footer.innerHTML = `
+        <div class="d-flex align-items-center gap-2 text-muted" style="font-size:.8rem">
+          <i class="bi bi-exclamation-circle"></i>
+          <span>Semua kriteria wajib diisi</span>
+        </div>
+        <button class="btn btn-primary btn-sm px-3" id="btn-simpan" onclick="simpanPenilaian()">
+          <i class="bi bi-floppy-fill me-1"></i>Simpan Penilaian
+        </button>`;
+    }
+  }
+
+  /* ── Edit mode ────────────────────────────────────────────── */
+  function enterEditMode() {
+    lockedMode = false;
+    renderBanner(false);
+    renderFormFields(existingData, false);
+    updateFooter(false, true);
+  }
+
+  function cancelEdit() {
+    lockedMode = true;
+    renderBanner(true);
+    renderFormFields(existingData, true);
+    updateFooter(true, true);
+  }
+
+  /* ── Value display helpers ────────────────────────────────── */
+  function updateNilai(kriteriaId, sel) {
+    const opt   = sel.selectedOptions[0];
+    const nilai = opt?.dataset.nilai;
+    const disp  = document.getElementById('display-' + kriteriaId);
+    const bar   = document.getElementById('bar-' + kriteriaId);
+    if (disp) disp.textContent = nilai || '—';
+    if (bar)  bar.style.width  = nilai ? Math.min(100, parseFloat(nilai)) + '%' : '0%';
+  }
+
+  function updateBar(kriteriaId, val) {
+    const bar  = document.getElementById('bar-' + kriteriaId);
+    const disp = document.getElementById('display-' + kriteriaId);
+    const n    = parseFloat(val);
+    if (bar)  bar.style.width = (!isNaN(n) ? Math.min(100, Math.max(0, n)) : 0) + '%';
+    if (disp) disp.textContent = val !== '' && !isNaN(n) ? n + ' / 100' : '—';
+  }
+
+  /* ── Save ─────────────────────────────────────────────────── */
+  async function simpanPenilaian() {
+    if (!selectedKandidatId) { showToast('Pilih kandidat terlebih dahulu', 'warning'); return; }
+
+    for (const k of kriteriaList) {
+      const el = document.getElementById('field-' + k.id);
+      const hasSub = subKriteriaMap[k.id]?.length > 0;
+      if (hasSub && !el.value) {
+        showToast('Pilih sub kriteria untuk ' + k.namaKriteria, 'warning'); return;
+      }
+      if (!hasSub && el.value === '') {
+        showToast('Isi nilai untuk ' + k.namaKriteria, 'warning'); return;
+      }
+    }
+
+    const items = kriteriaList.map(k => {
+      const el = document.getElementById('field-' + k.id);
+      const hasSub = subKriteriaMap[k.id]?.length > 0;
+      if (hasSub) return { kriteriaId: k.id, subKriteriaId: parseInt(el.value), nilaiInput: null };
+      return { kriteriaId: k.id, subKriteriaId: null, nilaiInput: parseFloat(el.value) };
+    });
+
+    const btn = document.getElementById('btn-simpan');
+    setLoading(btn, true);
+    try {
+      await api.post('/api/penilaian/save', { kandidatId: selectedKandidatId, items });
+      showToast('Penilaian berhasil disimpan');
+      await selectKandidat(selectedKandidatId);
+    } catch(e) {
+      showToast(e.message, 'error');
+      updateFooter(false, Object.keys(existingData).length > 0);
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>

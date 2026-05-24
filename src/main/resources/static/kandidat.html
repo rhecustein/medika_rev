@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kandidat — SPK Medika</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+  :root { --primary:#C62828; --primary-light:#FFEBEE; }
+
+  /* Stat cards */
+  .stat-card {
+    background:#fff;
+    border-radius:12px;
+    border:1px solid #F0F0F0;
+    padding:18px 20px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    box-shadow:0 1px 4px rgba(0,0,0,.05);
+    transition:box-shadow .2s;
+  }
+  .stat-card:hover { box-shadow:0 3px 10px rgba(0,0,0,.09); }
+  .stat-icon {
+    width:46px;height:46px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.3rem;flex-shrink:0;
+  }
+  .stat-label { font-size:.72rem;color:#888;font-weight:500;text-transform:uppercase;letter-spacing:.5px; }
+  .stat-value { font-size:1.6rem;font-weight:700;line-height:1.1;color:#1a1a1a; }
+
+  /* Filter tabs */
+  .filter-tabs { display:flex;gap:6px;flex-wrap:wrap; }
+  .filter-tab {
+    padding:5px 14px;border-radius:20px;font-size:.82rem;font-weight:500;
+    border:1px solid #E0E0E0;background:#fff;color:#555;cursor:pointer;
+    transition:all .18s;display:flex;align-items:center;gap:5px;
+  }
+  .filter-tab:hover { border-color:#C62828;color:#C62828;background:#FFEBEE; }
+  .filter-tab.active { background:#C62828;color:#fff;border-color:#C62828; }
+  .filter-tab .tab-badge {
+    background:rgba(255,255,255,.25);color:inherit;
+    padding:0 6px;border-radius:10px;font-size:.72rem;
+  }
+  .filter-tab:not(.active) .tab-badge { background:#F0F0F0;color:#666; }
+
+  /* Avatar */
+  .avatar-circle {
+    width:38px;height:38px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:.82rem;flex-shrink:0;
+  }
+  .av-proses    { background:#FFF3E0;color:#E65100; }
+  .av-diterima  { background:#E8F5E9;color:#2E7D32; }
+  .av-ditolak   { background:#FFEBEE;color:#C62828; }
+
+  /* Table */
+  .tbl-kandidat thead th {
+    background:#FAFAFA;font-size:.78rem;font-weight:600;
+    color:#666;text-transform:uppercase;letter-spacing:.4px;
+    padding:10px 12px;border-bottom:2px solid #F0F0F0;white-space:nowrap;
+  }
+  .tbl-kandidat tbody td { padding:10px 12px;vertical-align:middle;font-size:.88rem; }
+  .tbl-kandidat tbody tr { border-bottom:1px solid #F8F8F8; }
+  .tbl-kandidat tbody tr:hover { background:#FAFAFA; }
+
+  /* Candidate name cell */
+  .cand-name { font-weight:600;color:#1a1a1a;line-height:1.2; }
+  .cand-meta { font-size:.75rem;color:#888;margin-top:1px; }
+
+  /* Badges */
+  .badge-proses   { background:#FFF3E0;color:#E65100;font-weight:600;font-size:.74rem;padding:3px 9px;border-radius:12px; }
+  .badge-diterima { background:#E8F5E9;color:#2E7D32;font-weight:600;font-size:.74rem;padding:3px 9px;border-radius:12px; }
+  .badge-ditolak  { background:#FFEBEE;color:#C62828;font-weight:600;font-size:.74rem;padding:3px 9px;border-radius:12px; }
+
+  /* Action buttons */
+  .btn-aksi {
+    height:30px;border-radius:6px;font-size:.8rem;
+    display:inline-flex;align-items:center;gap:4px;
+    padding:0 10px;border:none;cursor:pointer;font-weight:500;
+    transition:opacity .15s;text-decoration:none;
+  }
+  .btn-aksi:hover { opacity:.85; }
+  .btn-penilaian { background:#E3F2FD;color:#1565C0; }
+  .btn-more {
+    width:30px;height:30px;border-radius:6px;
+    background:#F5F5F5;color:#555;border:none;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:.9rem;transition:background .15s;padding:0;
+  }
+  .btn-more:hover { background:#E0E0E0; }
+
+  /* Dropdown */
+  .dropdown-menu { font-size:.85rem;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.12);border:1px solid #E8E8E8;min-width:150px; }
+  .dropdown-item { padding:7px 14px;display:flex;align-items:center;gap:8px; }
+  .dropdown-item:hover { background:#F8F8F8; }
+  .dropdown-item.text-danger:hover { background:#FFF0F0; }
+
+  /* Search */
+  .search-wrap { position:relative;max-width:260px; }
+  .search-wrap .bi-search { position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#aaa;font-size:.85rem; }
+  .search-wrap input { padding-left:32px;border-radius:8px;border:1px solid #E0E0E0;font-size:.85rem;height:34px; }
+  .search-wrap input:focus { border-color:#C62828;box-shadow:0 0 0 2px rgba(198,40,40,.12);outline:none; }
+
+  /* Modal */
+  .modal-header-custom { background:linear-gradient(135deg,#C62828,#b71c1c);padding:16px 20px; }
+  .modal-header-custom .modal-title { color:#fff;font-size:.95rem;font-weight:600; }
+  .modal-header-custom .btn-close { filter:brightness(0) invert(1);opacity:.8; }
+  .section-label {
+    font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+    color:#C62828;border-bottom:2px solid #FFEBEE;padding-bottom:4px;margin-bottom:12px;
+  }
+
+  /* Empty state */
+  .empty-state { padding:50px 20px;text-align:center;color:#aaa; }
+  .empty-state i { font-size:2.5rem;display:block;margin-bottom:10px; }
+
+  /* Pagination */
+  #pagination .page-link { font-size:.82rem;border-radius:6px !important;margin:0 2px;color:#555; }
+  #pagination .page-item.active .page-link { background:#C62828;border-color:#C62828;color:#fff; }
+</style>
+</head>
+<body>
+<div id="sidebar"></div>
+<div id="topbar"></div>
+<div id="main">
+  <div class="content-area">
+
+    <!-- Stat cards -->
+    <div class="row g-3 mb-4" id="stat-row">
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#E3F2FD">
+            <i class="bi bi-people-fill" style="color:#1565C0"></i>
+          </div>
+          <div>
+            <div class="stat-label">Total</div>
+            <div class="stat-value" id="stat-total">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#FFF3E0">
+            <i class="bi bi-hourglass-split" style="color:#E65100"></i>
+          </div>
+          <div>
+            <div class="stat-label">Proses</div>
+            <div class="stat-value" id="stat-proses">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#E8F5E9">
+            <i class="bi bi-check-circle-fill" style="color:#2E7D32"></i>
+          </div>
+          <div>
+            <div class="stat-label">Diterima</div>
+            <div class="stat-value" id="stat-diterima">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#FFEBEE">
+            <i class="bi bi-x-circle-fill" style="color:#C62828"></i>
+          </div>
+          <div>
+            <div class="stat-label">Ditolak</div>
+            <div class="stat-value" id="stat-ditolak">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main card -->
+    <div class="sec-card">
+      <!-- Header -->
+      <div style="padding:14px 18px;border-bottom:1px solid #F0F0F0;">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+          <span class="sec-title" style="font-size:1rem">
+            <i class="bi bi-person-lines-fill me-2" style="color:var(--primary)"></i>Data Kandidat
+          </span>
+          <div class="d-flex gap-2">
+            <div class="search-wrap">
+              <i class="bi bi-search"></i>
+              <input type="text" id="search" placeholder="Cari nama...">
+            </div>
+            <button class="btn btn-primary btn-sm px-3" onclick="openModal()">
+              <i class="bi bi-plus-lg me-1"></i>Tambah
+            </button>
+          </div>
+        </div>
+        <!-- Filter tabs -->
+        <div class="filter-tabs" id="filter-tabs">
+          <button class="filter-tab active" data-status="" onclick="setFilter(this,'')">
+            Semua <span class="tab-badge" id="tab-total">0</span>
+          </button>
+          <button class="filter-tab" data-status="PROSES" onclick="setFilter(this,'PROSES')">
+            <i class="bi bi-hourglass-split" style="font-size:.75rem"></i> Proses
+            <span class="tab-badge" id="tab-proses">0</span>
+          </button>
+          <button class="filter-tab" data-status="DITERIMA" onclick="setFilter(this,'DITERIMA')">
+            <i class="bi bi-check-circle" style="font-size:.75rem"></i> Diterima
+            <span class="tab-badge" id="tab-diterima">0</span>
+          </button>
+          <button class="filter-tab" data-status="DITOLAK" onclick="setFilter(this,'DITOLAK')">
+            <i class="bi bi-x-circle" style="font-size:.75rem"></i> Ditolak
+            <span class="tab-badge" id="tab-ditolak">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="table tbl-kandidat mb-0">
+          <thead>
+            <tr>
+              <th style="width:44px">#</th>
+              <th>Kandidat</th>
+              <th>Pendidikan</th>
+              <th>Tgl Daftar</th>
+              <th>Status</th>
+              <th style="width:130px">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tb-kandidat">
+            <tr><td colspan="6" class="text-center py-4 text-muted">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div class="d-flex justify-content-between align-items-center px-3 py-2">
+        <small class="text-muted" id="info-count"></small>
+        <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Form Tambah/Edit -->
+<div class="modal fade" id="modal-form" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:12px;overflow:hidden;border:none">
+      <div class="modal-header modal-header-custom">
+        <h6 class="modal-title" id="modal-title">
+          <i class="bi bi-person-plus-fill me-2"></i>Tambah Kandidat
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:20px">
+        <form id="frm" onsubmit="return false">
+          <input type="hidden" id="fid">
+
+          <div class="section-label">Identitas</div>
+          <div class="row g-3 mb-3">
+            <div class="col-12">
+              <label class="form-label small fw-semibold mb-1">Nama Lengkap <span class="text-danger">*</span></label>
+              <input type="text" id="fnama" class="form-control form-control-sm" placeholder="Masukkan nama lengkap" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold mb-1">Jenis Kelamin</label>
+              <select id="fjk" class="form-select form-select-sm">
+                <option value="">-- Pilih --</option>
+                <option value="LAKI_LAKI">Laki-laki</option>
+                <option value="PEREMPUAN">Perempuan</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold mb-1">Tgl Daftar</label>
+              <input type="date" id="ftanggal" class="form-control form-control-sm">
+            </div>
+          </div>
+
+          <div class="section-label">Pendidikan</div>
+          <div class="row g-3 mb-3">
+            <div class="col-12">
+              <label class="form-label small fw-semibold mb-1">Pendidikan Terakhir</label>
+              <input type="text" id="fpendidikan" class="form-control form-control-sm" placeholder="Contoh: S1 Informatika">
+            </div>
+          </div>
+
+          <div id="status-group" style="display:none">
+            <div class="section-label">Status Seleksi</div>
+            <select id="fstatus" class="form-select form-select-sm">
+              <option value="PROSES">Proses</option>
+              <option value="DITERIMA">Diterima</option>
+              <option value="DITOLAK">Ditolak</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer" style="padding:12px 20px;border-top:1px solid #F0F0F0">
+        <button class="btn btn-light btn-sm px-3" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-primary btn-sm px-4" id="btn-save" onclick="saveKandidat()">
+          <i class="bi bi-save me-1"></i>Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirm Delete -->
+<div class="modal fade" id="modal-delete" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content" style="border-radius:12px;border:none">
+      <div class="modal-body text-center py-4">
+        <div style="width:56px;height:56px;background:#FFEBEE;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+          <i class="bi bi-trash3-fill" style="font-size:1.4rem;color:#C62828"></i>
+        </div>
+        <div class="fw-semibold mb-1">Hapus Kandidat?</div>
+        <div class="text-muted small mb-3" id="delete-name">Kandidat ini akan dihapus beserta seluruh data penilaiannya.</div>
+        <div class="d-flex gap-2 justify-content-center">
+          <button class="btn btn-light btn-sm px-3" data-bs-dismiss="modal">Batal</button>
+          <button class="btn btn-danger btn-sm px-3" id="btn-confirm-delete">Ya, Hapus</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+  renderLayout('Data Kandidat', 'kandidat');
+
+  let currentPage = 0, totalPages = 0, activeStatus = '';
+  const modalForm   = new bootstrap.Modal(document.getElementById('modal-form'));
+  const modalDelete = new bootstrap.Modal(document.getElementById('modal-delete'));
+
+  /* ── Helpers ───────────────────────────────────────────────── */
+  function initials(nama) {
+    return (nama || '?').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+  }
+
+  function avatarClass(status) {
+    return status === 'DITERIMA' ? 'av-diterima' : status === 'DITOLAK' ? 'av-ditolak' : 'av-proses';
+  }
+
+  function statusBadgeEl(status) {
+    const map = {
+      PROSES:   ['badge-proses',   'Proses'],
+      DITERIMA: ['badge-diterima', 'Diterima'],
+      DITOLAK:  ['badge-ditolak',  'Ditolak'],
+    };
+    const [cls, lbl] = map[status] || ['', status];
+    return `<span class="${cls}">${lbl}</span>`;
+  }
+
+  function fmtDate(d) {
+    if (!d) return '—';
+    const [y,m,day] = d.split('-');
+    const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+    return `${parseInt(day,10)} ${months[parseInt(m,10)-1]} ${y}`;
+  }
+
+  /* ── Stats ─────────────────────────────────────────────────── */
+  async function loadStats() {
+    try {
+      const res = await api.get('/api/kandidat/stats');
+      const s = res.data;
+      document.getElementById('stat-total').textContent   = s.total   ?? 0;
+      document.getElementById('stat-proses').textContent  = s.proses  ?? 0;
+      document.getElementById('stat-diterima').textContent= s.diterima ?? 0;
+      document.getElementById('stat-ditolak').textContent = s.ditolak  ?? 0;
+      document.getElementById('tab-total').textContent    = s.total   ?? 0;
+      document.getElementById('tab-proses').textContent   = s.proses  ?? 0;
+      document.getElementById('tab-diterima').textContent = s.diterima ?? 0;
+      document.getElementById('tab-ditolak').textContent  = s.ditolak  ?? 0;
+    } catch(e) {}
+  }
+
+  /* ── Filter tabs ────────────────────────────────────────────── */
+  function setFilter(btn, status) {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    activeStatus = status;
+    loadData(0);
+  }
+
+  /* ── Table ──────────────────────────────────────────────────── */
+  async function loadData(page = 0) {
+    const search = document.getElementById('search').value;
+    let url = `/api/kandidat?search=${encodeURIComponent(search)}&page=${page}&size=10`;
+    if (activeStatus) url += `&status=${activeStatus}`;
+
+    try {
+      const res = await api.get(url);
+      const d = res.data;
+      currentPage = d.number;
+      totalPages  = d.totalPages;
+
+      document.getElementById('info-count').textContent =
+        `Menampilkan ${d.numberOfElements} dari ${d.totalElements} data`;
+
+      const tb = document.getElementById('tb-kandidat');
+      if (d.content.length === 0) {
+        tb.innerHTML = `
+          <tr><td colspan="6">
+            <div class="empty-state">
+              <i class="bi bi-person-x"></i>
+              <div class="fw-semibold text-muted">Tidak ada kandidat ditemukan</div>
+              <div class="small text-muted mt-1">Coba ubah filter atau kata kunci pencarian</div>
+            </div>
+          </td></tr>`;
+        document.getElementById('info-count').textContent = '';
+        renderPagination('pagination', 0, 0, () => {});
+        return;
+      }
+
+      tb.innerHTML = d.content.map((k, i) => `
+        <tr>
+          <td class="text-muted" style="font-size:.8rem">${d.number * 10 + i + 1}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="avatar-circle ${avatarClass(k.status)}">${initials(k.nama)}</div>
+              <div>
+                <div class="cand-name">${k.nama}</div>
+                <div class="cand-meta"><i class="bi bi-mortarboard me-1"></i>${k.pendidikanTerakhir || '—'}</div>
+              </div>
+            </div>
+          </td>
+          <td class="text-muted" style="font-size:.84rem">${k.pendidikanTerakhir || '—'}</td>
+          <td class="text-muted" style="font-size:.84rem">${fmtDate(k.tanggalDaftar)}</td>
+          <td>${statusBadgeEl(k.status)}</td>
+          <td>
+            <div class="d-flex gap-1 align-items-center">
+              <a href="/penilaian.html?kandidatId=${k.id}" class="btn-aksi btn-penilaian" title="Input Penilaian">
+                <i class="bi bi-pencil-square"></i> Nilai
+              </a>
+              <div class="dropdown">
+                <button class="btn-more dropdown-toggle" data-bs-toggle="dropdown" title="Aksi lain">
+                  <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <a class="dropdown-item" href="#" onclick="editKandidat(${k.id});return false">
+                      <i class="bi bi-pencil-fill text-primary"></i> Edit Data
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider my-1"></li>
+                  <li>
+                    <a class="dropdown-item text-danger" href="#" onclick="confirmDelete(${k.id},'${k.nama.replace(/'/g,"\\'")}');return false">
+                      <i class="bi bi-trash3-fill"></i> Hapus
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </td>
+        </tr>`).join('');
+
+      renderPagination('pagination', currentPage, totalPages, p => loadData(p));
+    } catch(e) { showToast(e.message || 'Gagal memuat data', 'error'); }
+  }
+
+  /* ── Modal Form ─────────────────────────────────────────────── */
+  function openModal(data = null) {
+    document.getElementById('fid').value         = data?.id || '';
+    document.getElementById('fnama').value       = data?.nama || '';
+    document.getElementById('fjk').value         = data?.jenisKelamin || '';
+    document.getElementById('fpendidikan').value = data?.pendidikanTerakhir || '';
+    document.getElementById('ftanggal').value    = data?.tanggalDaftar || new Date().toISOString().split('T')[0];
+    document.getElementById('fstatus').value     = data?.status || 'PROSES';
+    document.getElementById('status-group').style.display = data ? 'block' : 'none';
+    document.getElementById('modal-title').innerHTML = data
+      ? '<i class="bi bi-pencil-fill me-2"></i>Edit Kandidat'
+      : '<i class="bi bi-person-plus-fill me-2"></i>Tambah Kandidat';
+    modalForm.show();
+  }
+
+  async function editKandidat(id) {
+    try {
+      const res = await api.get('/api/kandidat/' + id);
+      openModal(res.data);
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function saveKandidat() {
+    const id    = document.getElementById('fid').value;
+    const nama  = document.getElementById('fnama').value.trim();
+    if (!nama) { document.getElementById('fnama').focus(); return; }
+
+    const payload = {
+      nama,
+      jenisKelamin:      document.getElementById('fjk').value || null,
+      pendidikanTerakhir:document.getElementById('fpendidikan').value,
+      tanggalDaftar:     document.getElementById('ftanggal').value,
+      status:            document.getElementById('fstatus').value,
+    };
+
+    const btn = document.getElementById('btn-save');
+    setLoading(btn, true);
+    try {
+      if (id) {
+        await api.put('/api/kandidat/' + id, payload);
+        showToast('Kandidat berhasil diupdate');
+      } else {
+        await api.post('/api/kandidat', payload);
+        showToast('Kandidat berhasil ditambahkan');
+      }
+      modalForm.hide();
+      loadData(currentPage);
+      loadStats();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { setLoading(btn, false, '<i class="bi bi-save me-1"></i>Simpan'); }
+  }
+
+  /* ── Delete ─────────────────────────────────────────────────── */
+  let pendingDeleteId = null;
+  function confirmDelete(id, nama) {
+    pendingDeleteId = id;
+    document.getElementById('delete-name').textContent =
+      `"${nama}" beserta data penilaiannya akan dihapus permanen.`;
+    modalDelete.show();
+  }
+
+  document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+    if (!pendingDeleteId) return;
+    const btn = document.getElementById('btn-confirm-delete');
+    setLoading(btn, true);
+    try {
+      await api.delete('/api/kandidat/' + pendingDeleteId);
+      showToast('Kandidat berhasil dihapus');
+      modalDelete.hide();
+      loadData(currentPage);
+      loadStats();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally {
+      setLoading(btn, false, 'Ya, Hapus');
+      pendingDeleteId = null;
+    }
+  });
+
+  /* ── Search ─────────────────────────────────────────────────── */
+  let searchTimer;
+  document.getElementById('search').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => loadData(0), 400);
+  });
+
+  /* ── Init ───────────────────────────────────────────────────── */
+  loadStats();
+  loadData();
+</script>
+</body>
+</html>

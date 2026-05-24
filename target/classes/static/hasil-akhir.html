@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hasil Akhir — SPK Medika</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+.breadcrumb-bar {
+  font-size: .8rem;
+  color: #aaa;
+  margin-bottom: 20px;
+}
+.breadcrumb-bar a { color: #aaa; text-decoration: none; }
+.breadcrumb-bar a:hover { color: var(--primary); }
+.breadcrumb-bar span { color: #555; }
+
+.ha-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 5px rgba(0,0,0,.08);
+  overflow: hidden;
+}
+.ha-toolbar {
+  padding: 16px 20px;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+/* table rows */
+.ha-table thead th {
+  background: #FAFAFA;
+  font-size: .78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: #666;
+  border-bottom: 2px solid #ECECEC;
+  padding: 11px 16px;
+  white-space: nowrap;
+}
+.ha-table tbody td {
+  font-size: .875rem;
+  padding: 12px 16px;
+  vertical-align: middle;
+  border-bottom: 1px solid #F5F5F5;
+}
+.ha-table tbody tr:last-child td { border-bottom: none; }
+.ha-table tbody tr:hover { background: #FFF5F5; }
+
+/* rank medal */
+.medal-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.medal-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+.rank-num {
+  font-weight: 600;
+  color: #555;
+}
+
+/* nilai akhir pill */
+.nilai-pill {
+  display: inline-block;
+  background: #EBF3FF;
+  color: #1565C0;
+  font-weight: 700;
+  font-size: .85rem;
+  padding: 3px 12px;
+  border-radius: 20px;
+}
+
+/* empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #bbb;
+}
+.empty-state i { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+.empty-state p { font-size: .9rem; margin: 0; }
+.empty-state a { color: var(--primary); }
+</style>
+</head>
+<body>
+<div id="sidebar"></div>
+<div id="topbar"></div>
+
+<div id="main">
+  <div class="content-area">
+
+    <!-- Page heading + breadcrumb -->
+    <h5 class="fw-bold mb-1" style="color:#222">Hasil Akhir</h5>
+    <div class="breadcrumb-bar mb-4">
+      <a href="/dashboard.html">Dashboard</a>
+      &nbsp;/&nbsp;
+      <span>Hasil Akhir</span>
+    </div>
+
+    <!-- Main card -->
+    <div class="ha-card">
+      <!-- toolbar -->
+      <div class="ha-toolbar d-flex align-items-center gap-2">
+        <button class="btn btn-success btn-sm px-3" id="btn-excel" onclick="doExportExcel(this)">
+          <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+        </button>
+      </div>
+
+      <!-- table -->
+      <div class="table-responsive">
+        <table class="table ha-table mb-0">
+          <thead>
+            <tr>
+              <th style="width:60px">No</th>
+              <th>Nama Kandidat</th>
+              <th style="width:160px">Nilai Akhir</th>
+              <th style="width:120px">Rank</th>
+            </tr>
+          </thead>
+          <tbody id="tb-hasil">
+            <tr>
+              <td colspan="4">
+                <div class="empty-state">
+                  <i class="bi bi-hourglass-split"></i>
+                  <p>Memuat data...</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+  renderLayout('Hasil Akhir', 'hasil-akhir');
+
+  function medalIcon(rank) {
+    if (rank === 1) return '<span class="medal-icon">🥇</span>';
+    if (rank === 2) return '<span class="medal-icon">🥈</span>';
+    if (rank === 3) return '<span class="medal-icon">🥉</span>';
+    return '';
+  }
+
+  async function loadHasil() {
+    try {
+      const res = await api.get('/api/hasil/ranking');
+      const tb  = document.getElementById('tb-hasil');
+      const data = res.data || [];
+
+      if (data.length === 0) {
+        tb.innerHTML = `
+          <tr><td colspan="4">
+            <div class="empty-state">
+              <i class="bi bi-trophy"></i>
+              <p>Belum ada hasil perhitungan.<br>
+                 <a href="/smart.html">Lakukan Perhitungan SMART</a> terlebih dahulu.
+              </p>
+            </div>
+          </td></tr>`;
+        return;
+      }
+
+      tb.innerHTML = data.map((h, i) => `
+        <tr>
+          <td class="text-muted">${i + 1}</td>
+          <td><strong>${h.namaKandidat}</strong></td>
+          <td><span class="nilai-pill">${parseFloat(h.nilaiAkhir).toFixed(4)}</span></td>
+          <td>
+            <div class="medal-wrap">
+              ${medalIcon(h.ranking)}
+              <span class="rank-num">${h.ranking}</span>
+            </div>
+          </td>
+        </tr>`).join('');
+    } catch(e) {
+      document.getElementById('tb-hasil').innerHTML = `
+        <tr><td colspan="4" class="text-center text-danger py-4">
+          Gagal memuat data. ${e.message}
+        </td></tr>`;
+    }
+  }
+
+  async function doExportExcel(btn) {
+    const orig = btn.innerHTML;
+    setLoading(btn, true);
+    try {
+      const blob = await api.blob('/api/laporan/export/excel');
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = 'hasil-akhir-seleksi.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('File Excel berhasil diunduh');
+    } catch(e) {
+      showToast('Gagal mengunduh: ' + e.message, 'error');
+    } finally {
+      setLoading(btn, false, orig);
+    }
+  }
+
+  loadHasil();
+</script>
+</body>
+</html>

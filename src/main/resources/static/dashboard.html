@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — SPK Medika</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+/* ── Dashboard Card ─────────────────────────────────────── */
+.dash-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 22px;
+  box-shadow: 0 1px 5px rgba(0,0,0,.08);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: 100%;
+}
+.dash-icon {
+  width: 60px; height: 60px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.7rem; flex-shrink: 0;
+}
+.dash-icon.red    { background: #FDECEA; color: #E74C3C; }
+.dash-icon.orange { background: #FFF3E0; color: #F39C12; }
+.dash-icon.blue   { background: #E3F2FD; color: #1976D2; }
+.dash-icon.green  { background: #E8F5E9; color: #27AE60; }
+.dash-label { font-size: .78rem; color: #999; margin-bottom: 2px; }
+.dash-num   { font-size: 2rem; font-weight: 800; line-height: 1.1; color: #222; }
+.dash-sub   { font-size: .76rem; color: #bbb; margin-top: 1px; }
+
+/* ── Chart Card ─────────────────────────────────────────── */
+.chart-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 22px;
+  box-shadow: 0 1px 5px rgba(0,0,0,.08);
+  height: 100%;
+}
+.chart-card-title {
+  font-size: .92rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 18px;
+}
+.chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 260px;
+}
+</style>
+</head>
+<body>
+<div id="sidebar"></div>
+<div id="topbar"></div>
+
+<div id="main">
+  <div class="content-area">
+
+    <h5 class="fw-bold mb-4" style="color:#222">Dashboard</h5>
+
+    <!-- ── Stat Cards ──────────────────────────────────────────── -->
+    <div class="row g-3 mb-4">
+
+      <div class="col-6 col-xl-3">
+        <div class="dash-card">
+          <div class="dash-icon red"><i class="bi bi-people-fill"></i></div>
+          <div>
+            <div class="dash-label">Total Kandidat</div>
+            <div class="dash-num" id="s-total">—</div>
+            <div class="dash-sub">Kandidat</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-xl-3">
+        <div class="dash-card">
+          <div class="dash-icon orange"><i class="bi bi-ui-checks-grid"></i></div>
+          <div>
+            <div class="dash-label">Total Kriteria</div>
+            <div class="dash-num" id="s-kriteria">—</div>
+            <div class="dash-sub">Kriteria</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-xl-3">
+        <div class="dash-card">
+          <div class="dash-icon blue"><i class="bi bi-clipboard2-check-fill"></i></div>
+          <div>
+            <div class="dash-label">Penilaian</div>
+            <div class="dash-num" id="s-dinilai">—</div>
+            <div class="dash-sub">Dinilai</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-xl-3">
+        <div class="dash-card">
+          <div class="dash-icon green"><i class="bi bi-trophy-fill"></i></div>
+          <div>
+            <div class="dash-label">Hasil Terbaik</div>
+            <div class="dash-num" id="s-terbaik">—</div>
+            <div class="dash-sub">Nilai Tertinggi</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Charts ──────────────────────────────────────────────── -->
+    <div class="row g-3">
+
+      <!-- Bar: 5 Besar Kandidat -->
+      <div class="col-md-7">
+        <div class="chart-card">
+          <div class="chart-card-title">5 Besar Kandidat</div>
+          <div class="chart-wrap">
+            <canvas id="chartBar"></canvas>
+            <div id="no-rank" class="text-center text-muted d-none" style="padding-top:80px">
+              <i class="bi bi-bar-chart-line fs-2 d-block mb-2 opacity-25"></i>
+              Belum ada hasil perhitungan
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Donut: Bobot Kriteria -->
+      <div class="col-md-5">
+        <div class="chart-card">
+          <div class="chart-card-title">Bobot Kriteria</div>
+          <div class="chart-wrap">
+            <canvas id="chartDonut"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+  renderLayout('Dashboard', 'dashboard');
+
+  const DONUT_COLORS = ['#E74C3C','#E67E22','#2ECC71','#1ABC9C','#3498DB','#9B59B6','#F1C40F','#E91E63'];
+
+  async function loadDashboard() {
+    try {
+      const [statsRes, kriRes, rankRes] = await Promise.all([
+        api.get('/api/dashboard/stats'),
+        api.get('/api/kriteria'),
+        api.get('/api/hasil/ranking').catch(() => ({ data: [] }))
+      ]);
+
+      /* ── Stat cards ── */
+      const s = statsRes.data;
+      document.getElementById('s-total').textContent   = s.totalKandidat;
+      document.getElementById('s-kriteria').textContent = s.totalKriteria;
+      document.getElementById('s-dinilai').textContent  = s.sudahDinilai;
+
+      const ranking = rankRes.data || [];
+      document.getElementById('s-terbaik').textContent =
+        ranking.length > 0 ? ranking[0].nilaiAkhir.toFixed(2) : '—';
+
+      /* ── Bar chart: 5 Besar Kandidat ── */
+      const top5 = ranking.slice(0, 5);
+      if (top5.length > 0) {
+        new Chart(document.getElementById('chartBar'), {
+          type: 'bar',
+          data: {
+            labels: top5.map(r => r.namaKandidat),
+            datasets: [{
+              data: top5.map(r => r.nilaiAkhir),
+              backgroundColor: '#E74C3C',
+              borderRadius: 4,
+              barThickness: 24,
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: {
+                min: 0,
+                max: 1,
+                ticks: {
+                  stepSize: 0.2,
+                  callback: v => v.toFixed(1)
+                },
+                grid: { color: '#F0F0F0' }
+              },
+              y: {
+                grid: { display: false },
+                ticks: { font: { size: 12 } }
+              }
+            }
+          }
+        });
+      } else {
+        document.getElementById('chartBar').classList.add('d-none');
+        document.getElementById('no-rank').classList.remove('d-none');
+      }
+
+      /* ── Donut chart: Bobot Kriteria ── */
+      const kri = kriRes.data;
+      new Chart(document.getElementById('chartDonut'), {
+        type: 'doughnut',
+        data: {
+          labels: kri.map(k => `${k.namaKriteria} (${k.bobot}%)`),
+          datasets: [{
+            data: kri.map(k => k.bobot),
+            backgroundColor: DONUT_COLORS.slice(0, kri.length),
+            borderWidth: 2,
+            borderColor: '#fff',
+            hoverOffset: 10
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '58%',
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                font: { size: 11 },
+                padding: 10,
+                boxWidth: 13,
+                usePointStyle: true,
+                pointStyle: 'circle'
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => ` ${ctx.label}`
+              }
+            }
+          }
+        }
+      });
+
+    } catch(e) {
+      console.error('Dashboard load error:', e);
+    }
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>

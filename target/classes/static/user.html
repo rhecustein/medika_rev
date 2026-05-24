@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manajemen User — SPK Medika</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div id="sidebar"></div>
+<div id="topbar"></div>
+<div id="main">
+  <div class="content-area">
+    <div class="sec-card">
+      <div class="sec-title" style="padding:14px 18px;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;justify-content:space-between">
+        <span><i class="bi bi-person-gear me-2" style="color:var(--primary)"></i>Manajemen User</span>
+        <button class="btn btn-primary btn-sm" onclick="openModal()">
+          <i class="bi bi-plus-lg me-1"></i>Tambah User
+        </button>
+      </div>
+      <div class="table-responsive">
+        <table class="table tbl-sm mb-0">
+          <thead>
+            <tr><th>No</th><th>Nama</th><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th style="width:90px">Aksi</th></tr>
+          </thead>
+          <tbody id="tb-user"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modal-form" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header" style="background:var(--primary);color:#fff">
+        <h6 class="modal-title" id="modal-title">Tambah User</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="fid">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Nama Lengkap *</label>
+            <input type="text" id="fnama" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Username *</label>
+            <input type="text" id="fusername" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Password <span id="pw-hint" class="text-muted">(kosongkan jika tidak diubah)</span></label>
+            <input type="password" id="fpassword" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Email</label>
+            <input type="email" id="femail" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Role *</label>
+            <select id="frole" class="form-select">
+              <option value="ADMIN">ADMIN</option>
+              <option value="HRD">HRD</option>
+              <option value="PENILAI">PENILAI</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Status</label>
+            <select id="fstatus" class="form-select">
+              <option value="AKTIF">Aktif</option>
+              <option value="NONAKTIF">Non Aktif</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-primary btn-sm" id="btn-save" onclick="save()">
+          <i class="bi bi-save me-1"></i>Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+  requireRole(['ADMIN']);
+  renderLayout('Manajemen User', 'user');
+  const modal = new bootstrap.Modal(document.getElementById('modal-form'));
+  let userList = [];
+
+  async function loadData() {
+    try {
+      const res = await api.get('/api/user');
+      userList = res.data;
+      document.getElementById('tb-user').innerHTML = userList.map((u, i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td><strong>${u.nama}</strong></td>
+          <td>${u.username}</td>
+          <td>${u.email || '-'}</td>
+          <td>${roleBadge(u.role)}</td>
+          <td>
+            <span class="badge ${u.status==='AKTIF'?'bg-success':'bg-secondary'}">
+              ${u.status}
+            </span>
+          </td>
+          <td>
+            <button class="btn-edit-sm me-1" onclick="editItem(${u.id})" title="Edit">
+              <i class="bi bi-pencil-fill"></i>
+            </button>
+            <button class="btn-del-sm" onclick="deleteItem(${u.id}, '${u.nama}')" title="Hapus">
+              <i class="bi bi-trash-fill"></i>
+            </button>
+          </td>
+        </tr>`).join('');
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function openModal(data = null) {
+    const isNew = !data;
+    document.getElementById('fid').value        = data?.id || '';
+    document.getElementById('fnama').value      = data?.nama || '';
+    document.getElementById('fusername').value  = data?.username || '';
+    document.getElementById('fpassword').value  = '';
+    document.getElementById('femail').value     = data?.email || '';
+    document.getElementById('frole').value      = data?.role || 'HRD';
+    document.getElementById('fstatus').value    = data?.status || 'AKTIF';
+    document.getElementById('pw-hint').style.display = isNew ? 'none' : 'inline';
+    document.getElementById('modal-title').textContent = isNew ? 'Tambah User' : 'Edit User';
+    modal.show();
+  }
+
+  function editItem(id) {
+    const u = userList.find(x => x.id === id);
+    if (u) openModal(u);
+  }
+
+  async function save() {
+    const id = document.getElementById('fid').value;
+    const payload = {
+      nama:     document.getElementById('fnama').value,
+      username: document.getElementById('fusername').value,
+      password: document.getElementById('fpassword').value || undefined,
+      email:    document.getElementById('femail').value,
+      role:     document.getElementById('frole').value,
+      status:   document.getElementById('fstatus').value,
+    };
+    const btn = document.getElementById('btn-save');
+    setLoading(btn, true);
+    try {
+      if (id) { await api.put('/api/user/' + id, payload); showToast('User diupdate'); }
+      else     { await api.post('/api/user', payload);      showToast('User ditambahkan'); }
+      modal.hide();
+      loadData();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { setLoading(btn, false, '<i class="bi bi-save me-1"></i>Simpan'); }
+  }
+
+  async function deleteItem(id, nama) {
+    if (!confirmDialog(`Hapus user "${nama}"?`)) return;
+    try {
+      await api.delete('/api/user/' + id);
+      showToast('User dihapus');
+      loadData();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  loadData();
+</script>
+</body>
+</html>

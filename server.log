@@ -1,0 +1,67 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------------------< com.medika:spk >---------------------------
+[INFO] Building SPK Medika Akses Investama 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.2.5:run (default-cli) > test-compile @ spk >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ spk ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 15 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ spk ---
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 52 source files with javac [debug release 17] to target\classes
+[WARNING] /C:/Dev/medika_dev/src/main/java/com/medika/spk/dto/response/JwtResponse.java:[11,20] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ spk ---
+[INFO] skip non existing resourceDirectory C:\Dev\medika_dev\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ spk ---
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 1 source file with javac [debug release 17] to target\test-classes
+[INFO] 
+[INFO] <<< spring-boot:3.2.5:run (default-cli) < test-compile @ spk <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.2.5:run (default-cli) @ spk ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.5)
+
+2026-05-23T19:47:40.543+07:00  INFO 10780 --- [spk-medika] [           main] com.medika.spk.SpkApplication            : Starting SpkApplication using Java 17.0.12 with PID 10780 (C:\Dev\medika_dev\target\classes started by Bintang Wijaya in C:\Dev\medika_dev)
+2026-05-23T19:47:40.552+07:00  INFO 10780 --- [spk-medika] [           main] com.medika.spk.SpkApplication            : No active profile set, falling back to 1 default profile: "default"
+2026-05-23T19:47:41.825+07:00  INFO 10780 --- [spk-medika] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-05-23T19:47:41.988+07:00  INFO 10780 --- [spk-medika] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 154 ms. Found 7 JPA repository interfaces.
+2026-05-23T19:47:42.928+07:00  INFO 10780 --- [spk-medika] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-05-23T19:47:42.944+07:00  INFO 10780 --- [spk-medika] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-05-23T19:47:42.944+07:00  INFO 10780 --- [spk-medika] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-05-23T19:47:43.037+07:00  INFO 10780 --- [spk-medika] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-05-23T19:47:43.039+07:00  INFO 10780 --- [spk-medika] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2407 ms
+2026-05-23T19:47:43.210+07:00  INFO 10780 --- [spk-medika] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-05-23T19:47:43.281+07:00  INFO 10780 --- [spk-medika] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.4.Final
+2026-05-23T19:47:43.334+07:00  INFO 10780 --- [spk-medika] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-05-23T19:47:43.642+07:00  INFO 10780 --- [spk-medika] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-05-23T19:47:43.676+07:00  INFO 10780 --- [spk-medika] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-05-23T19:47:43.896+07:00  INFO 10780 --- [spk-medika] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@6546371
+2026-05-23T19:47:43.899+07:00  INFO 10780 --- [spk-medika] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-05-23T19:47:43.963+07:00  WARN 10780 --- [spk-medika] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-05-23T19:47:43.965+07:00  WARN 10780 --- [spk-medika] [           main] org.hibernate.orm.deprecation            : HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2026-05-23T19:47:45.393+07:00  INFO 10780 --- [spk-medika] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-05-23T19:47:45.581+07:00  INFO 10780 --- [spk-medika] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-05-23T19:47:46.371+07:00  INFO 10780 --- [spk-medika] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-05-23T19:47:47.350+07:00  INFO 10780 --- [spk-medika] [           main] o.s.b.a.w.s.WelcomePageHandlerMapping    : Adding welcome page: class path resource [static/index.html]
+2026-05-23T19:47:47.990+07:00  INFO 10780 --- [spk-medika] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path ''
+2026-05-23T19:47:48.003+07:00  INFO 10780 --- [spk-medika] [           main] com.medika.spk.SpkApplication            : Started SpkApplication in 8.064 seconds (process running for 8.695)
+2026-05-23T19:47:48.119+07:00  INFO 10780 --- [spk-medika] [           main] com.medika.spk.config.DataInitializer    : Data initializer selesai.
+2026-05-23T19:47:48.373+07:00  INFO 10780 --- [spk-medika] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-05-23T19:47:48.373+07:00  INFO 10780 --- [spk-medika] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-05-23T19:47:48.374+07:00  INFO 10780 --- [spk-medika] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms

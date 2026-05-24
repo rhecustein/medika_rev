@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perhitungan SMART — SPK Medika</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div id="sidebar"></div>
+<div id="topbar"></div>
+
+<div id="main">
+<div class="content-area">
+
+<!-- ═══ STEP INDICATOR ══════════════════════════════════════════ -->
+<div class="step-bar">
+  <div class="step-node">
+    <div class="step-circle active" id="sc1">1</div>
+    <div class="step-label active" id="sl1">Pilih Kriteria &amp; Bobot</div>
+  </div>
+  <div class="step-connector" id="cx1"></div>
+  <div class="step-node">
+    <div class="step-circle" id="sc2">2</div>
+    <div class="step-label" id="sl2">Input Nilai Kandidat</div>
+  </div>
+  <div class="step-connector" id="cx2"></div>
+  <div class="step-node">
+    <div class="step-circle" id="sc3">3</div>
+    <div class="step-label" id="sl3">Normalisasi Bobot</div>
+  </div>
+  <div class="step-connector" id="cx3"></div>
+  <div class="step-node">
+    <div class="step-circle" id="sc4">4</div>
+    <div class="step-label" id="sl4">Hitung Utility</div>
+  </div>
+  <div class="step-connector" id="cx4"></div>
+  <div class="step-node">
+    <div class="step-circle" id="sc5">5</div>
+    <div class="step-label" id="sl5">Hasil Perhitungan</div>
+  </div>
+</div>
+
+<!-- ═══ ROW 1 — Section 1 & 2 ══════════════════════════════════ -->
+<div class="row g-3 mb-3">
+
+  <!-- SECTION 1: Kriteria & Bobot -->
+  <div class="col-lg-6">
+    <div class="sec-card">
+      <div class="sec-title">1. Kriteria dan Bobot Penilaian</div>
+      <div class="sec-body">
+        <div class="table-responsive">
+          <table class="table tbl-sm mb-1">
+            <thead>
+              <tr><th>No</th><th>Kriteria</th><th>Bobot (%)</th><th>Atribut</th><th>Aksi</th></tr>
+            </thead>
+            <tbody id="tb-s1">
+              <tr><td colspan="5" class="text-center text-muted py-3">Memuat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="d-flex align-items-center gap-2 mt-1">
+          <span class="fw-bold small" id="total-bobot-lbl" style="color:var(--primary)">Total Bobot: 100%</span>
+          <span id="total-bobot-warn" class="text-danger small" style="display:none">⚠ Harus 100%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Input Nilai Kandidat -->
+  <div class="col-lg-6">
+    <div class="sec-card">
+      <div class="sec-title">2. Input Nilai Kandidat</div>
+      <div class="sec-body">
+        <div class="mb-2">
+          <label class="form-label small fw-semibold mb-1">Pilih Kandidat</label>
+          <select id="sel-kand" class="form-select form-select-sm" onchange="onKandidatChange()">
+            <option value="">-- Pilih Kandidat --</option>
+          </select>
+        </div>
+        <div class="table-responsive">
+          <table class="table tbl-sm mb-2">
+            <thead>
+              <tr><th>No</th><th>Kriteria</th><th>Nilai</th><th>Sub Kriteria</th></tr>
+            </thead>
+            <tbody id="tb-s2">
+              <tr><td colspan="4" class="text-center text-muted py-3">Pilih kandidat</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="text-center">
+          <button class="btn btn-success btn-sm px-4" id="btn-simpan-nilai" onclick="simpanNilai()" disabled>
+            <i class="bi bi-save me-1"></i>Simpan Nilai
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ROW 2 — Section 3, 4, 5 ════════════════════════════════ -->
+<div class="row g-3 mb-0">
+
+  <!-- SECTION 3: Normalisasi Bobot -->
+  <div class="col-lg-4">
+    <div class="sec-card">
+      <div class="sec-title">3. Normalisasi Bobot</div>
+      <div class="sec-body">
+        <!-- Formula -->
+        <div class="formula-box">
+          <span class="formula-text">W<sub>j</sub></span>
+          <span class="mx-2">=</span>
+          <span class="formula-frac">
+            <span class="num">w<sub>j</sub></span>
+            <span class="den">&#x2211;<sup>n</sup><sub>j=1</sub> w<sub>j</sub></span>
+          </span>
+        </div>
+        <div class="table-responsive">
+          <table class="table tbl-sm mb-0">
+            <thead>
+              <tr><th>No</th><th>Kriteria</th><th>Bobot Awal (w<sub>j</sub>)</th><th>Normalisasi (W<sub>j</sub>)</th></tr>
+            </thead>
+            <tbody id="tb-s3"></tbody>
+            <tfoot id="tf-s3"></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: Hitung Utility -->
+  <div class="col-lg-4">
+    <div class="sec-card">
+      <div class="sec-title">4. Hitung Utility (u<sub>j</sub>(a<sub>i</sub>))</div>
+      <div class="sec-body">
+        <!-- Formula -->
+        <div class="formula-box">
+          <span class="formula-text">u<sub>j</sub>(a<sub>i</sub>)</span>
+          <span class="mx-2">=</span>
+          <span class="formula-frac">
+            <span class="num">C<sub>out</sub> &minus; C<sub>min</sub></span>
+            <span class="den">C<sub>max</sub> &minus; C<sub>min</sub></span>
+          </span>
+          <span class="formula-note">(Benefit)</span>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold mb-1">Pilih Kandidat</label>
+          <select id="sel-kand-4" class="form-select form-select-sm" onchange="syncAndLoadUtility(this.value)">
+            <option value="">-- Pilih Kandidat --</option>
+          </select>
+        </div>
+        <div class="table-responsive">
+          <table class="table tbl-sm mb-0">
+            <thead>
+              <tr><th>No</th><th>Kriteria</th><th>C<sub>out</sub></th><th>C<sub>min</sub></th><th>C<sub>max</sub></th><th>Utility</th></tr>
+            </thead>
+            <tbody id="tb-s4">
+              <tr><td colspan="6" class="text-center text-muted py-3">Pilih kandidat</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: Nilai Akhir -->
+  <div class="col-lg-4">
+    <div class="sec-card d-flex flex-column">
+      <div class="sec-title">5. Nilai Akhir (U(a<sub>i</sub>))</div>
+      <div class="sec-body flex-grow-1 d-flex flex-column">
+        <!-- Formula -->
+        <div class="formula-box green">
+          <span class="formula-text">U(a<sub>i</sub>)</span>
+          <span class="mx-2">=</span>
+          <span class="formula-text">&#x2211;<sup>m</sup><sub>j=1</sub> W<sub>j</sub> &times; u<sub>j</sub>(a<sub>i</sub>)</span>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold mb-1">Pilih Kandidat</label>
+          <select id="sel-kand-5" class="form-select form-select-sm" onchange="syncAndLoadUtility(this.value)">
+            <option value="">-- Pilih Kandidat --</option>
+          </select>
+        </div>
+        <div class="table-responsive flex-grow-1">
+          <table class="table tbl-sm mb-0">
+            <thead>
+              <tr><th>No</th><th>Kriteria</th><th>W<sub>j</sub></th><th>Utility</th><th>W<sub>j</sub> &times; Utility</th></tr>
+            </thead>
+            <tbody id="tb-s5">
+              <tr><td colspan="5" class="text-center text-muted py-3">Pilih kandidat</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Total Nilai Akhir -->
+        <div class="total-nilai-row mt-auto" id="total-nilai-area" style="display:none">
+          <span class="total-nilai-label">Total Nilai Akhir (U(a<sub>i</sub>))</span>
+          <span class="total-nilai-val" id="total-nilai-val">0.0000</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FOOTER BAR ═══════════════════════════════════════════════ -->
+<div class="footer-bar">
+  <button class="btn btn-outline-secondary" onclick="history.back()">
+    <i class="bi bi-arrow-left me-1"></i>Kembali
+  </button>
+  <button class="btn btn-primary btn-hitung text-white" id="btn-hitung" onclick="hitungSemua()">
+    <i class="bi bi-calculator me-2"></i>Hitung Semua Kandidat
+  </button>
+  <button class="btn btn-outline-primary" onclick="window.location.href='/hasil.html'">
+    Simpan Hasil <i class="bi bi-arrow-right ms-1"></i>
+  </button>
+</div>
+
+</div><!-- content-area -->
+</div><!-- main -->
+
+<!-- Modal Edit Kriteria (untuk section 1) -->
+<div class="modal fade" id="modal-kri" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header" style="background:var(--primary);color:#fff;padding:10px 16px">
+        <span class="fw-bold small" id="mkri-title">Edit Kriteria</span>
+        <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="mkri-id">
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Kode</label>
+          <input type="text" id="mkri-kode" class="form-control form-control-sm">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Nama Kriteria</label>
+          <input type="text" id="mkri-nama" class="form-control form-control-sm">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Bobot (%)</label>
+          <input type="number" id="mkri-bobot" class="form-control form-control-sm" min="0" max="100" step="0.01">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Atribut</label>
+          <select id="mkri-atribut" class="form-select form-select-sm">
+            <option value="BENEFIT">BENEFIT</option>
+            <option value="COST">COST</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding:8px 16px">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-primary btn-sm" id="mkri-save" onclick="saveKriteria()">
+          <i class="bi bi-save me-1"></i>Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+renderLayout('Proses Perhitungan SMART', 'smart');
+
+/* ─── State ────────────────────────────────────────────────── */
+let kriteriaList = [], normalisasi = {}, kandidatList = [], subKriteriaMap = {};
+let selectedKandidatId = null;
+const modalKri = new bootstrap.Modal(document.getElementById('modal-kri'));
+
+/* ─── Init ──────────────────────────────────────────────────── */
+async function init() {
+  try {
+    const [kriRes, normRes, kandRes] = await Promise.all([
+      api.get('/api/kriteria'),
+      api.get('/api/smart/normalisasi'),
+      api.get('/api/kandidat?size=999')
+    ]);
+    kriteriaList  = kriRes.data;
+    normalisasi   = normRes.data;
+    kandidatList  = kandRes.data.content || kandRes.data;
+
+    // Load all sub-kriteria
+    await Promise.all(kriteriaList.map(async k => {
+      const res = await api.get('/api/sub-kriteria?kriteriaId=' + k.id);
+      if (res.data.length > 0) subKriteriaMap[k.id] = res.data;
+    }));
+
+    renderSection1();
+    renderSection3();
+    populateKandidatDropdowns();
+    activateStep(1);
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+/* ─── Section 1: Kriteria & Bobot ──────────────────────────── */
+function renderSection1() {
+  const total = kriteriaList.reduce((s, k) => s + k.bobot, 0);
+  const valid = Math.abs(total - 100) < 0.01;
+
+  document.getElementById('tb-s1').innerHTML = kriteriaList.map((k, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td><strong>${k.namaKriteria}</strong></td>
+      <td>${k.bobot}</td>
+      <td><span class="badge-${k.atribut === 'BENEFIT' ? 'benefit' : 'cost'}">${k.atribut === 'BENEFIT' ? 'Benefit' : 'Cost'}</span></td>
+      <td>
+        <button class="btn-edit-sm me-1" onclick="editKriteria(${k.id})" title="Edit"><i class="bi bi-pencil-fill"></i></button>
+        <button class="btn-del-sm" onclick="deleteKriteria(${k.id},'${k.namaKriteria}')" title="Hapus"><i class="bi bi-trash-fill"></i></button>
+      </td>
+    </tr>`).join('');
+
+  const lblEl  = document.getElementById('total-bobot-lbl');
+  const warnEl = document.getElementById('total-bobot-warn');
+  lblEl.textContent = 'Total Bobot: ' + total + '%';
+  lblEl.style.color = valid ? 'var(--primary)' : '#E74C3C';
+  warnEl.style.display = valid ? 'none' : 'inline';
+}
+
+/* ─── Section 3: Normalisasi Bobot ─────────────────────────── */
+function renderSection3() {
+  const total = kriteriaList.reduce((s, k) => s + k.bobot, 0);
+  document.getElementById('tb-s3').innerHTML = kriteriaList.map((k, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${k.namaKriteria}</td>
+      <td>${k.bobot}</td>
+      <td><strong class="text-primary">${fmt4(normalisasi[k.id])}</strong></td>
+    </tr>`).join('');
+
+  const totalWj = Object.values(normalisasi).reduce((s, v) => s + v, 0);
+  document.getElementById('tf-s3').innerHTML = `
+    <tr>
+      <td colspan="2" class="total-red">Total</td>
+      <td class="total-red">${total}</td>
+      <td class="text-success fw-bold">${fmt4(totalWj)}</td>
+    </tr>`;
+}
+
+/* ─── Populate Kandidat Dropdowns ───────────────────────────── */
+function populateKandidatDropdowns() {
+  ['sel-kand','sel-kand-4','sel-kand-5'].forEach(id => {
+    const sel = document.getElementById(id);
+    kandidatList.forEach(k => {
+      const o = document.createElement('option');
+      o.value = k.id; o.textContent = k.nama;
+      sel.appendChild(o);
+    });
+  });
+}
+
+/* ─── Kandidat change (syncs all dropdowns) ─────────────────── */
+async function onKandidatChange() {
+  const id = document.getElementById('sel-kand').value;
+  if (!id) return;
+  syncDropdowns(id);
+  selectedKandidatId = parseInt(id);
+  document.getElementById('btn-simpan-nilai').disabled = false;
+  activateStep(2);
+  await loadSection2(id);
+  await loadUtilityAndNilaiAkhir(id);
+}
+
+async function syncAndLoadUtility(id) {
+  if (!id) return;
+  syncDropdowns(id);
+  selectedKandidatId = parseInt(id);
+  document.getElementById('btn-simpan-nilai').disabled = false;
+  await loadSection2(id);
+  await loadUtilityAndNilaiAkhir(id);
+}
+
+function syncDropdowns(id) {
+  ['sel-kand','sel-kand-4','sel-kand-5'].forEach(sid => {
+    document.getElementById(sid).value = id;
+  });
+}
+
+/* ─── Section 2: Load penilaian kandidat ────────────────────── */
+async function loadSection2(kandidatId) {
+  try {
+    const res = await api.get('/api/penilaian/kandidat/' + kandidatId);
+    const existing = {};
+    res.data.forEach(p => { existing[p.kriteria.id] = p; });
+
+    document.getElementById('tb-s2').innerHTML = kriteriaList.map((k, i) => {
+      const ex  = existing[k.id];
+      const val = ex?.nilaiInput ?? '';
+      const hasSub = subKriteriaMap[k.id]?.length > 0;
+
+      let inputEl, subEl;
+      if (hasSub) {
+        const opts = subKriteriaMap[k.id].map(s =>
+          `<option value="${s.id}" data-nilai="${s.nilai}" ${ex?.subKriteria?.id === s.id ? 'selected' : ''}>
+            ${s.namaSub}
+           </option>`).join('');
+        inputEl = `<input type="text" class="nilai-input" id="nv-${k.id}" value="${val}" readonly style="background:#f9f9f9">`;
+        subEl   = `<select class="sub-select" id="sub-${k.id}" onchange="onSubChange(${k.id},this)">
+                     <option value="">--</option>${opts}
+                   </select>`;
+      } else {
+        inputEl = `<input type="number" class="nilai-input" id="nv-${k.id}" value="${val}" min="0" max="100" step="0.5">`;
+        subEl   = `<span class="text-muted small" id="sub-lbl-${k.id}">${getNilaiLabel(val)}</span>`;
+      }
+
+      return `<tr>
+        <td>${i+1}</td>
+        <td>${k.namaKriteria}</td>
+        <td>${inputEl}</td>
+        <td>${subEl}</td>
+      </tr>`;
+    }).join('');
+
+    activateStep(2);
+  } catch(e) {
+    document.getElementById('tb-s2').innerHTML =
+      '<tr><td colspan="4" class="text-center text-muted py-2">Belum ada penilaian</td></tr>';
+  }
+}
+
+function onSubChange(kriteriaId, sel) {
+  const opt  = sel.selectedOptions[0];
+  const nilai = opt?.dataset.nilai || '';
+  const input = document.getElementById('nv-' + kriteriaId);
+  if (input) input.value = nilai;
+}
+
+function getNilaiLabel(nilai) {
+  if (!nilai && nilai !== 0) return '-';
+  const n = parseFloat(nilai);
+  if (n >= 90) return 'Sangat Baik';
+  if (n >= 75) return 'Baik';
+  if (n >= 60) return 'Cukup';
+  if (n >= 40) return 'Kurang';
+  return 'Sangat Kurang';
+}
+
+/* ─── Simpan Nilai ──────────────────────────────────────────── */
+async function simpanNilai() {
+  if (!selectedKandidatId) return;
+  const items = kriteriaList.map(k => {
+    const hasSub = subKriteriaMap[k.id]?.length > 0;
+    const subEl  = document.getElementById('sub-' + k.id);
+    const nvEl   = document.getElementById('nv-' + k.id);
+    if (hasSub) {
+      return { kriteriaId: k.id, subKriteriaId: subEl?.value ? parseInt(subEl.value) : null, nilaiInput: null };
+    } else {
+      return { kriteriaId: k.id, subKriteriaId: null, nilaiInput: parseFloat(nvEl?.value) || 0 };
+    }
+  });
+
+  const btn = document.getElementById('btn-simpan-nilai');
+  setLoading(btn, true);
+  try {
+    await api.post('/api/penilaian/save', { kandidatId: selectedKandidatId, items });
+    showToast('Penilaian berhasil disimpan');
+    // Refresh normalisasi (Cmin/Cmax might change)
+    const normRes = await api.get('/api/smart/normalisasi');
+    normalisasi = normRes.data;
+    renderSection3();
+    await loadUtilityAndNilaiAkhir(selectedKandidatId);
+  } catch(e) { showToast(e.message, 'error'); }
+  finally { setLoading(btn, false, '<i class="bi bi-save me-1"></i>Simpan Nilai'); }
+}
+
+/* ─── Load Section 4 & 5 ────────────────────────────────────── */
+async function loadUtilityAndNilaiAkhir(kandidatId) {
+  try {
+    const res = await api.get('/api/smart/detail/' + kandidatId);
+    const d   = res.data;
+
+    // Section 4: Utility
+    document.getElementById('tb-s4').innerHTML = d.details.map((x, i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td>${x.namaKriteria}</td>
+        <td><strong>${x.cout}</strong></td>
+        <td>${x.cmin}</td>
+        <td>${x.cmax}</td>
+        <td><strong class="text-success">${fmt4(x.utility)}</strong></td>
+      </tr>`).join('');
+
+    // Section 5: Nilai Akhir
+    document.getElementById('tb-s5').innerHTML = d.details.map((x, i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td>${x.namaKriteria}</td>
+        <td>${fmt4(x.bobotNormalisasi)}</td>
+        <td>${fmt4(x.utility)}</td>
+        <td><strong>${fmt4(x.wjXUtility)}</strong></td>
+      </tr>`).join('');
+
+    document.getElementById('total-nilai-val').textContent = fmt4(d.nilaiAkhir);
+    document.getElementById('total-nilai-area').style.display = 'flex';
+
+    activateStep(4);
+  } catch(e) {
+    document.getElementById('tb-s4').innerHTML =
+      '<tr><td colspan="6" class="text-center text-muted py-2">Belum ada penilaian</td></tr>';
+    document.getElementById('tb-s5').innerHTML =
+      '<tr><td colspan="5" class="text-center text-muted py-2">Belum ada penilaian</td></tr>';
+  }
+}
+
+/* ─── Hitung Semua ───────────────────────────────────────────── */
+async function hitungSemua() {
+  const btn = document.getElementById('btn-hitung');
+  const txt = '<i class="bi bi-calculator me-2"></i>Hitung Semua Kandidat';
+  setLoading(btn, true);
+  try {
+    const res  = await api.post('/api/smart/hitung-semua');
+    const list = res.data;
+    activateStep(5);
+    showToast('Perhitungan selesai! ' + list.length + ' kandidat diranking.', 'success');
+
+    // Redirect to hasil after short delay
+    setTimeout(() => { window.location.href = '/hasil.html'; }, 1200);
+  } catch(e) { showToast(e.message, 'error'); }
+  finally { setLoading(btn, false, txt); }
+}
+
+/* ─── Kriteria edit/delete ───────────────────────────────────── */
+function editKriteria(id) {
+  const k = kriteriaList.find(x => x.id === id);
+  if (!k) return;
+  document.getElementById('mkri-id').value      = k.id;
+  document.getElementById('mkri-kode').value    = k.kode;
+  document.getElementById('mkri-nama').value    = k.namaKriteria;
+  document.getElementById('mkri-bobot').value   = k.bobot;
+  document.getElementById('mkri-atribut').value = k.atribut;
+  document.getElementById('mkri-title').textContent = 'Edit Kriteria — ' + k.kode;
+  modalKri.show();
+}
+
+async function saveKriteria() {
+  const id  = document.getElementById('mkri-id').value;
+  const pay = {
+    kode:         document.getElementById('mkri-kode').value,
+    namaKriteria: document.getElementById('mkri-nama').value,
+    bobot:        parseFloat(document.getElementById('mkri-bobot').value),
+    atribut:      document.getElementById('mkri-atribut').value
+  };
+  const btn = document.getElementById('mkri-save');
+  setLoading(btn, true);
+  try {
+    await api.put('/api/kriteria/' + id, pay);
+    const [kriRes, normRes] = await Promise.all([
+      api.get('/api/kriteria'),
+      api.get('/api/smart/normalisasi')
+    ]);
+    kriteriaList = kriRes.data;
+    normalisasi  = normRes.data;
+    renderSection1();
+    renderSection3();
+    if (selectedKandidatId) await loadUtilityAndNilaiAkhir(selectedKandidatId);
+    modalKri.hide();
+    showToast('Kriteria berhasil diupdate');
+  } catch(e) { showToast(e.message, 'error'); }
+  finally { setLoading(btn, false, '<i class="bi bi-save me-1"></i>Simpan'); }
+}
+
+async function deleteKriteria(id, nama) {
+  if (!confirmDialog(`Hapus kriteria "${nama}"?`)) return;
+  try {
+    await api.delete('/api/kriteria/' + id);
+    const [kriRes, normRes] = await Promise.all([
+      api.get('/api/kriteria'),
+      api.get('/api/smart/normalisasi')
+    ]);
+    kriteriaList = kriRes.data;
+    normalisasi  = normRes.data;
+    renderSection1();
+    renderSection3();
+    showToast('Kriteria dihapus');
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+/* ─── Step Indicator Activation ─────────────────────────────── */
+function activateStep(n) {
+  for (let i = 1; i <= 5; i++) {
+    const sc = document.getElementById('sc' + i);
+    const sl = document.getElementById('sl' + i);
+    sc.className = 'step-circle' + (i < n ? ' done' : i === n ? ' active' : '');
+    sl.className = 'step-label'  + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+  for (let i = 1; i <= 4; i++) {
+    const cx = document.getElementById('cx' + i);
+    cx.className = 'step-connector' + (i < n ? ' done' : '');
+  }
+}
+
+init();
+</script>
+</body>
+</html>

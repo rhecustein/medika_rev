@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laporan — SPK Medika</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div id="sidebar"></div>
+<div id="topbar"></div>
+<div id="main">
+  <div class="content-area">
+    <div class="row g-3">
+      <!-- Export Excel -->
+      <div class="col-md-6">
+        <div class="sec-card">
+          <div class="sec-title" style="padding:14px 18px 0">
+            <i class="bi bi-file-earmark-excel me-2" style="color:#217346"></i>Export Excel
+          </div>
+          <div class="sec-body">
+            <p class="text-muted small mb-2">Ekspor data hasil seleksi lengkap ke format Excel (.xlsx) termasuk semua nilai per kriteria.</p>
+            <ul class="small text-muted mb-3">
+              <li>Data semua kandidat beserta ranking</li>
+              <li>Nilai per kriteria (C1–C5)</li>
+              <li>Nilai akhir &amp; status kandidat</li>
+            </ul>
+            <button class="btn btn-success" onclick="downloadExcel(this)">
+              <i class="bi bi-download me-2"></i>Download Excel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export PDF -->
+      <div class="col-md-6">
+        <div class="sec-card">
+          <div class="sec-title" style="padding:14px 18px 0">
+            <i class="bi bi-file-earmark-pdf me-2" style="color:var(--primary)"></i>Export PDF
+          </div>
+          <div class="sec-body">
+            <p class="text-muted small mb-2">Ekspor ringkasan hasil seleksi ke format PDF untuk keperluan dokumentasi atau presentasi.</p>
+            <ul class="small text-muted mb-3">
+              <li>Ringkasan hasil ranking kandidat</li>
+              <li>Nilai akhir SMART</li>
+              <li>Status keputusan</li>
+            </ul>
+            <button class="btn btn-danger" onclick="downloadPdf(this)">
+              <i class="bi bi-download me-2"></i>Download PDF
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview Ranking -->
+      <div class="col-12">
+        <div class="sec-card">
+          <div class="sec-title" style="padding:14px 18px;border-bottom:1px solid #F0F0F0">
+            <i class="bi bi-eye me-2" style="color:var(--primary)"></i>Preview Ranking
+          </div>
+          <div class="table-responsive">
+            <table class="table tbl-sm mb-0">
+              <thead>
+                <tr><th>Rank</th><th>Nama Kandidat</th><th>Nilai Akhir</th><th>Status</th></tr>
+              </thead>
+              <tbody id="tb-preview"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+  renderLayout('Laporan', 'laporan');
+
+  async function loadPreview() {
+    try {
+      const res = await api.get('/api/hasil/ranking');
+      const tb = document.getElementById('tb-preview');
+      if (res.data.length === 0) {
+        tb.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">Belum ada hasil. <a href="/smart.html">Hitung SMART</a></td></tr>';
+        return;
+      }
+      tb.innerHTML = res.data.map(h => `
+        <tr class="${h.ranking<=3?'rank-'+h.ranking:''}">
+          <td><span class="rank-badge ${h.ranking===1?'r1':h.ranking===2?'r2':h.ranking===3?'r3':'rn'}">${h.ranking}</span></td>
+          <td><strong>${h.namaKandidat}</strong></td>
+          <td><span class="badge bg-primary">${fmt4(h.nilaiAkhir)}</span></td>
+          <td>${statusBadge(h.status)}</td>
+        </tr>`).join('');
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function downloadExcel(btn) {
+    setLoading(btn, true);
+    try {
+      const blob = await api.blob('/api/laporan/export/excel');
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = 'laporan-seleksi.xlsx'; a.click();
+      URL.revokeObjectURL(url);
+      showToast('File Excel berhasil diunduh');
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { setLoading(btn, false, '<i class="bi bi-download me-2"></i>Download Excel'); }
+  }
+
+  async function downloadPdf(btn) {
+    setLoading(btn, true);
+    try {
+      const blob = await api.blob('/api/laporan/export/pdf');
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = 'laporan-seleksi.pdf'; a.click();
+      URL.revokeObjectURL(url);
+      showToast('File PDF berhasil diunduh');
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { setLoading(btn, false, '<i class="bi bi-download me-2"></i>Download PDF'); }
+  }
+
+  loadPreview();
+</script>
+</body>
+</html>

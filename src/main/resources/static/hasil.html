@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hasil Ranking — SPK Medika</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div id="sidebar"></div>
+<div id="topbar"></div>
+<div id="main">
+  <div class="content-area">
+    <div class="sec-card">
+      <div class="sec-title" style="padding:14px 18px;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <span><i class="bi bi-trophy-fill me-2" style="color:#FFD700"></i>Hasil &amp; Ranking Kandidat</span>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-primary btn-sm" onclick="loadData()">
+            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+          </button>
+          <a href="/smart.html" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-calculator me-1"></i>Hitung Ulang
+          </a>
+        </div>
+      </div>
+
+      <!-- Top 3 Podium -->
+      <div class="sec-body pb-0" id="podium-area"></div>
+
+      <!-- Full Table -->
+      <div class="table-responsive">
+        <table class="table tbl-sm mb-0">
+          <thead>
+            <tr>
+              <th>Rank</th><th>Nama Kandidat</th><th>Jabatan</th>
+              <th>Nilai U(a<sub>i</sub>)</th><th>Status</th><th style="width:150px">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tb-hasil"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal fade" id="modal-detail" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background:var(--primary);color:#fff">
+        <h6 class="modal-title" id="modal-nama">Detail Perhitungan</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="modal-detail-body"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+  renderLayout('Hasil & Ranking', 'hasil');
+  const detailModal = new bootstrap.Modal(document.getElementById('modal-detail'));
+  let hasilList = [];
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  async function loadData() {
+    try {
+      const res = await api.get('/api/hasil/ranking');
+      hasilList = res.data;
+
+      if (hasilList.length === 0) {
+        document.getElementById('tb-hasil').innerHTML =
+          '<tr><td colspan="6" class="text-center text-muted py-4">Belum ada hasil perhitungan. <a href="/smart.html">Hitung sekarang</a></td></tr>';
+        document.getElementById('podium-area').innerHTML = '';
+        return;
+      }
+
+      renderPodium(hasilList.slice(0, 3));
+
+      document.getElementById('tb-hasil').innerHTML = hasilList.map(h => `
+        <tr class="${h.ranking<=3?'rank-'+h.ranking:''}">
+          <td>
+            <span class="rank-badge ${h.ranking===1?'r1':h.ranking===2?'r2':h.ranking===3?'r3':'rn'}">
+              ${h.ranking}
+            </span>
+          </td>
+          <td><strong>${h.namaKandidat}</strong></td>
+          <td class="text-muted">—</td>
+          <td>
+            <span class="badge bg-primary">${fmt4(h.nilaiAkhir)}</span>
+            <div class="progress mt-1" style="height:4px;max-width:100px">
+              <div class="progress-bar bg-primary" style="width:${Math.round(h.nilaiAkhir*100)}%"></div>
+            </div>
+          </td>
+          <td>${statusBadge(h.status)}</td>
+          <td>
+            <div class="d-flex gap-1 align-items-center">
+              <button class="btn-info-sm" onclick="showDetail(${h.kandidatId}, '${h.namaKandidat}')" title="Lihat Detail">
+                <i class="bi bi-eye-fill"></i>
+              </button>
+              ${(user.role==='ADMIN'||user.role==='HRD') ? `
+              <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle px-2"
+                        style="height:30px;font-size:.74rem;line-height:1"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                  Ubah Status
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" style="min-width:130px;font-size:.82rem">
+                  <li>
+                    <button class="dropdown-item py-1" onclick="updateStatus(${h.kandidatId},'DITERIMA')">
+                      <i class="bi bi-check-circle-fill text-success me-2"></i>Terima
+                    </button>
+                  </li>
+                  <li>
+                    <button class="dropdown-item py-1" onclick="updateStatus(${h.kandidatId},'DITOLAK')">
+                      <i class="bi bi-x-circle-fill text-danger me-2"></i>Tolak
+                    </button>
+                  </li>
+                </ul>
+              </div>` : ''}
+            </div>
+          </td>
+        </tr>`).join('');
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function renderPodium(top) {
+    if (top.length === 0) { document.getElementById('podium-area').innerHTML = ''; return; }
+    const medals = ['🥇', '🥈', '🥉'];
+    const colors  = ['#FFD700','#C0C0C0','#CD7F32'];
+    document.getElementById('podium-area').innerHTML = `
+      <div class="d-flex gap-3 flex-wrap justify-content-center py-3">
+        ${top.map((h, i) => `
+          <div class="text-center p-3 rounded" style="background:#FFF;border:2px solid ${colors[i]};min-width:160px;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+            <div style="font-size:2rem">${medals[i]}</div>
+            <div class="fw-bold small">${h.namaKandidat}</div>
+            <div class="badge bg-primary mt-1">${fmt4(h.nilaiAkhir)}</div>
+            <div class="mt-1">${statusBadge(h.status)}</div>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  async function showDetail(kandidatId, nama) {
+    document.getElementById('modal-nama').textContent = 'Detail Perhitungan — ' + nama;
+    document.getElementById('modal-detail-body').innerHTML =
+      '<div class="text-center py-3"><span class="spinner-border text-danger"></span></div>';
+    detailModal.show();
+
+    try {
+      const res = await api.get('/api/smart/detail/' + kandidatId);
+      const d = res.data;
+      document.getElementById('modal-detail-body').innerHTML = `
+        <div class="formula-box mb-3" style="font-size:.8rem;text-align:left">
+          <i class="bi bi-info-circle me-1"></i>
+          Utility = (C<sub>out</sub> − C<sub>min</sub>) / (C<sub>max</sub> − C<sub>min</sub>) &nbsp;|&nbsp;
+          U(a<sub>i</sub>) = Σ W<sub>j</sub> × u<sub>j</sub>(a<sub>i</sub>)
+        </div>
+        <div class="table-responsive">
+          <table class="table tbl-sm table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Kriteria</th>
+                <th class="text-center">C<sub>out</sub></th>
+                <th class="text-center">C<sub>min</sub></th>
+                <th class="text-center">C<sub>max</sub></th>
+                <th class="text-center">Utility</th>
+                <th class="text-center">W<sub>j</sub></th>
+                <th class="text-center">W<sub>j</sub>×u</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${d.details.map(x => `
+                <tr>
+                  <td>
+                    <span class="badge bg-danger me-1" style="font-size:.7rem">${x.kodeKriteria}</span>
+                    <span class="small">${x.namaKriteria}</span>
+                  </td>
+                  <td class="text-center fw-semibold">${x.cout}</td>
+                  <td class="text-center text-muted">${x.cmin}</td>
+                  <td class="text-center text-muted">${x.cmax}</td>
+                  <td class="text-center">
+                    <span class="badge bg-success bg-opacity-75">${fmt4(x.utility)}</span>
+                  </td>
+                  <td class="text-center text-primary">${fmt4(x.bobotNormalisasi)}</td>
+                  <td class="text-center fw-bold">${fmt4(x.wjXUtility)}</td>
+                </tr>`).join('')}
+            </tbody>
+            <tfoot>
+              <tr style="background:#FFF5F5">
+                <td colspan="6" class="fw-bold" style="color:var(--primary)">
+                  <i class="bi bi-calculator me-1"></i>U(a<sub>i</sub>) Total
+                </td>
+                <td class="fw-bold text-center fs-6" style="color:var(--primary)">${fmt4(d.nilaiAkhir)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>`;
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function updateStatus(kandidatId, status) {
+    const h = hasilList.find(x => x.kandidatId === kandidatId);
+    if (!h) return;
+    if (!confirmDialog(`Set ${h.namaKandidat} sebagai ${status}?`)) return;
+    try {
+      await apiRequest('PATCH', '/api/kandidat/' + kandidatId + '/status', { status });
+      showToast('Status diupdate menjadi ' + status);
+      loadData();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  loadData();
+</script>
+</body>
+</html>
