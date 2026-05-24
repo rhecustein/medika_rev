@@ -20,6 +20,7 @@ public class SmartCalculationService {
     private final KandidatRepository kandidatRepo;
     private final HasilPerhitunganRepository hasilRepo;
     private final DetailPerhitunganRepository detailRepo;
+    private final SubKriteriaRepository subKriteriaRepo;
 
     // ── Step 1: Normalisasi Bobot Wj = wj / Σwj ─────────────────────────────
     public Map<Long, Double> hitungNormalisasiBobot() {
@@ -195,11 +196,11 @@ public class SmartCalculationService {
     }
 
     private double getCmin(Long kriteriaId) {
-        return penilaianRepo.findMinNilaiByKriteriaId(kriteriaId).orElse(0.0);
+        return subKriteriaRepo.findMinNilaiByKriteriaId(kriteriaId).orElse(0.0);
     }
 
     private double getCmax(Long kriteriaId) {
-        return penilaianRepo.findMaxNilaiByKriteriaId(kriteriaId).orElse(100.0);
+        return subKriteriaRepo.findMaxNilaiByKriteriaId(kriteriaId).orElse(100.0);
     }
 
     private double round4(double val) {
